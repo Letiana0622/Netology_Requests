@@ -64,29 +64,44 @@ from pprint import pprint
 # Важно: Токен публиковать в github не нужно, переменную для токена нужно оставить пустой!
 # Шаблон для программы
 
+
 class YaUploader:
     def __init__(self, token: str):
         self.token = token
 
-    def get_ya_disk(self):
-        resp_get = requests.get('https://cloud-api.yandex.net/v1/disk')
-        print(resp_get)
+    def folder_creation(self):
+        url = f'https://cloud-api.yandex.net/v1/disk/resources/'
+        headers = {'Content-Type': 'application/json',
+                   'Authorization': f'OAuth {ya_token}'}
+        params = {'path': f'{folder_name}',
+                  'overwrite': 'false'}
+        response = requests.put(url=url, headers=headers, params=params)
+        print(response)
 
     def upload(self, file_path: str):
-        with open(file_path, 'rb') as f:
-            resp = requests.post('https://cloud-api.yandex.net/v1/disk/resources/upload', files={"file": f})
-        print(resp)
-#         """Метод загружает файлы по списку file_list на яндекс диск"""
-#         # Тут ваша логика
-#         # Функция может ничего не возвращать
+        url = f'https://cloud-api.yandex.net/v1/disk/resources/upload'
+        headers = {'Content-Type': 'application/json',
+                   'Authorization': f'OAuth {ya_token}'}
+        params = {'path': f'{folder_name}/{file_name}',
+                  'overwrite': 'true'}
+
+        response = requests.get(url=url, headers=headers, params=params)
+        href = response.json().get('href')
+
+        uploader = requests.put(href, data=open(files_path, 'rb'))
+        print(uploader)
 
 if __name__ == '__main__':
-#     # Получить путь к загружаемому файлу и токен от пользователя
+    ya_token = ''
+    file_name = "test_heroes.txt"
+    folder_name = 'Requests'
     import os
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
-    path_to_file = os.path.join(desktop, "test_heroes.txt")
-    print(path_to_file)
-    token = ''
-    uploader = YaUploader(token)
-    result = uploader.upload(path_to_file)
-    result_get = uploader.get_ya_disk()
+    files_path = os.path.join(desktop, file_name)
+    uploader = YaUploader(ya_token)
+    uploader.folder_creation()
+    uploader.upload(files_path)
+
+
+
+
